@@ -1617,10 +1617,10 @@ pub fn insertLines(self: *Terminal, count: usize) void {
                     _ = self.screens.active.adjustCapacity(
                         dst_p.node,
                         switch (err) {
-                            // Rehash the sets
+                            // Rehash the sets by forcing a page clone
                             error.StyleSetNeedsRehash,
                             error.HyperlinkSetNeedsRehash,
-                            => .{},
+                            => .{ .force = true },
 
                             // Increase style memory
                             error.StyleSetOutOfMemory,
@@ -1820,10 +1820,10 @@ pub fn deleteLines(self: *Terminal, count: usize) void {
                     _ = self.screens.active.adjustCapacity(
                         dst_p.node,
                         switch (err) {
-                            // Rehash the sets
+                            // Rehash the sets by forcing a page clone
                             error.StyleSetNeedsRehash,
                             error.HyperlinkSetNeedsRehash,
-                            => .{},
+                            => .{ .force = true },
 
                             // Increase style memory
                             error.StyleSetOutOfMemory,

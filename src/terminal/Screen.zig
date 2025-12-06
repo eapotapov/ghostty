@@ -1976,7 +1976,7 @@ pub fn manualStyleUpdate(self: *Screen) !void {
             self.cursor.page_pin.node,
             switch (err) {
                 error.OutOfMemory => .{ .styles = page.capacity.styles * 2 },
-                error.NeedsRehash => .{},
+                error.NeedsRehash => .{ .force = true },
             },
         );
 
@@ -2080,10 +2080,11 @@ pub fn startHyperlink(
                 .{ .hyperlink_bytes = self.cursor.page_pin.node.data.capacity.hyperlink_bytes * 2 },
             ),
 
-            // hyperlink set is too full, rehash it
+            // hyperlink set is too full, rehash it by forcing a page clone
+            // which rebuilds the set from scratch, compacting dead entries
             error.SetNeedsRehash => _ = try self.adjustCapacity(
                 self.cursor.page_pin.node,
-                .{},
+                .{ .force = true },
             ),
         }
 

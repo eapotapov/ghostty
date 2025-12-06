@@ -2546,6 +2546,11 @@ pub const AdjustCapacity = struct {
 
     /// Adjust the number of available string bytes in the page.
     string_bytes: ?usize = null,
+
+    /// Force a page clone even if no capacity change is needed.
+    /// This is used by SetNeedsRehash to trigger set compaction
+    /// by rebuilding the page from scratch.
+    force: bool = false,
 };
 
 pub const AdjustCapacityError = Allocator.Error || Page.CloneFromError;
@@ -2599,6 +2604,17 @@ pub fn adjustCapacity(
         comptime assert(@bitSizeOf(@TypeOf(v)) <= @bitSizeOf(usize));
         const aligned = std.math.ceilPowerOfTwo(usize, v) catch unreachable;
         cap.string_bytes = @max(cap.string_bytes, aligned);
+    }
+
+    // If no capacity change is needed and force is not set, return early.
+    // This avoids expensive page cloning when capacity is already sufficient.
+    if (!adjustment.force and
+        cap.styles == page.capacity.styles and
+        cap.grapheme_bytes == page.capacity.grapheme_bytes and
+        cap.hyperlink_bytes == page.capacity.hyperlink_bytes and
+        cap.string_bytes == page.capacity.string_bytes)
+    {
+        return node;
     }
 
     log.info("adjusting page capacity={}", .{cap});
